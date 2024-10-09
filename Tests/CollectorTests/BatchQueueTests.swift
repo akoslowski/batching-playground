@@ -33,8 +33,22 @@ import Testing
     #expect(batches[3] == ["10", "11"])
 }
 
+@Test func testBatchQueueYieldsSingleBatch() async throws {
+    let q = BatchQueue<String>(timeout: .milliseconds(5))
+
+    q.push("1")
+
+    var batches: [[String]] = []
+    for try await batch in q.prefix(1) {
+        batches.append(batch)
+    }
+
+    try #require(batches.count == 1)
+    #expect(batches == [["1"]])
+}
+
 @Test func testBatchQueueYieldsBatchesOnMainActor() async throws {
-    let q = BatchQueue<String>(timeout: .milliseconds(10))
+    let q = BatchQueue<String>(timeout: .milliseconds(5))
 
     Task { @MainActor in
         q.push("1")
@@ -66,7 +80,7 @@ import Testing
 }
 
 @Test func testBatchQueueYieldsBatchesOnAnyActor() async throws {
-    let q = BatchQueue<String>(timeout: .milliseconds(10))
+    let q = BatchQueue<String>(timeout: .milliseconds(5))
 
     Task {
         q.push("1")

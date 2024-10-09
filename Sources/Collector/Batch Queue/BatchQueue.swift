@@ -16,13 +16,13 @@ public actor BatchQueue<Element: Sendable>: AsyncSequence {
     /// Initializes a new BatchQueue with a specified batch size and timeout.
     /// - Parameters:
     ///   - batchSize: The number of elements to batch before emitting.
-    ///   - timeout: The duration to wait before emitting a batch.
+    ///   - timeout: The duration to wait before emitting a batch, when no more elements are incoming.
     public init(batchSize: Int = 3, timeout: Duration = .seconds(1)) {
         timer = .init(timeout: timeout) { [incomingEvents] in
             incomingEvents.push(.timeOut)
         }
 
-        worker = Task { [incomingEvents, outgoingBatches, batchSize, timer] in
+        worker = Task { [incomingEvents, outgoingBatches, timer] in
             var batch: [Element] = []
 
             for await event in incomingEvents {
