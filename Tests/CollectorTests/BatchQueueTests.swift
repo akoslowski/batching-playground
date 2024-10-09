@@ -22,7 +22,7 @@ import Testing
     q.push("11")
 
     var batches: [[String]] = []
-    for await batch in q.batches.prefix(4) {
+    for try await batch in q.prefix(4) {
         batches.append(batch)
     }
 
@@ -54,7 +54,7 @@ import Testing
     }
 
     var batches: [[String]] = []
-    for await batch in q.batches.prefix(4) {
+    for await batch in q.prefix(4) {
         batches.append(batch)
     }
 
@@ -86,7 +86,7 @@ import Testing
     }
 
     var batches: [[String]] = []
-    for await batch in q.batches.prefix(4) {
+    for await batch in q.prefix(4) {
         batches.append(batch)
     }
 

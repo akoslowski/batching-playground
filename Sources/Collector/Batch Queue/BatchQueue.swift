@@ -1,6 +1,7 @@
 import Foundation
 
-public actor BatchQueue<Element: Sendable> {
+public actor BatchQueue<Element: Sendable>: AsyncSequence {
+
     enum Event {
         case element(Element)
         case timeOut
@@ -19,7 +20,7 @@ public actor BatchQueue<Element: Sendable> {
         worker = Task { [incomingEvents, outgoingBatches, batchSize, timer] in
             var batch: [Element] = []
 
-            for await event in incomingEvents.stream {
+            for await event in incomingEvents {
                 switch event {
                 case .element(let element):
                     batch.append(element)
@@ -41,8 +42,8 @@ public actor BatchQueue<Element: Sendable> {
         }
     }
 
-    public nonisolated var batches: AsyncStream<[Element]> {
-        outgoingBatches.stream
+    public nonisolated func makeAsyncIterator() -> AsyncStream<[Element]>.Iterator {
+        outgoingBatches.makeAsyncIterator()
     }
 
     public nonisolated func push(_ element: Element) {
