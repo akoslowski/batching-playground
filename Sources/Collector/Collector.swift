@@ -22,9 +22,7 @@ struct Streamer<Element: Sendable> {
     }
 }
 
-
 public actor BatchQueue {
-
     enum Event {
         case element(String)
         case timeOut
@@ -35,6 +33,9 @@ public actor BatchQueue {
     private let worker: Task<Void, Never>
     private var timer: Task<Void, Never>?
 
+    let batchSize: Int = 3
+    let timeout: Duration = .milliseconds(100)
+
     public var values: AsyncStream<[String]> {
         outgoingBatches.stream
     }
@@ -42,131 +43,48 @@ public actor BatchQueue {
     public func cancel() {
         incomingEvents.cancel()
         outgoingBatches.cancel()
-    }
-
-    public nonisolated func push(_ event: String) {
-        incomingEvents.push(.element(event))
-
-    }
-
-    func resetTimer() {
         timer?.cancel()
+    }
+
+    public func push(_ event: String) async {
+        await resetTimer()
+        incomingEvents.push(.element(event))
+    }
+
+    private func resetTimer() async {
+        timer?.cancel()
+        await timer?.value
         timer = Task { [incomingEvents] in
             do {
-                try await Task.sleep(for: .seconds(1))
+                try await Task.sleep(for: timeout)
                 incomingEvents.push(.timeOut)
             } catch {
-                // nothing
+                print("Timer reset due to incoming event")
+                // Timer was cancelled, do nothing
             }
         }
     }
 
     public init() {
-//        timer = Task { [incomingEvents] in
-//            do {
-//                try await Task.sleep(for: .seconds(1))
-//                incomingEvents.push(.timeOut)
-//            } catch {
-//                // nothing
-//            }
-//        }
-
-        worker = Task { [incomingEvents, outgoingBatches] in
+        worker = Task { [incomingEvents, outgoingBatches, batchSize] in
             var batch: [String] = []
 
             for await event in incomingEvents.stream {
                 switch event {
-                case .element(let string):
-                    if batch.count < 3 {
-                        batch.append(string)
+                case .element(let element):
+                    if batch.count < batchSize {
+                        batch.append(element)
                     } else {
                         outgoingBatches.push(batch)
-                        batch = [string]
+                        batch = [element]
                     }
-
                 case .timeOut:
-                    outgoingBatches.push(batch)
+                    if batch.isEmpty == false {
+                        outgoingBatches.push(batch)
+                        batch = []
+                    }
                 }
-
             }
-        }
-    }
-}
-
-
-
-final class CollectionAssistent {
-    let collector: Collector
-    private let stream: AsyncStream<String>
-    private let continuation: AsyncStream<String>.Continuation?
-    private let worker: Task<Void, Never>
-
-    public init() {
-        var _continuation: AsyncStream<String>.Continuation?
-        stream = AsyncStream { continuation in
-            _continuation = continuation
-        }
-        continuation = _continuation
-        collector = Collector()
-        worker = Task { [stream, collector] in
-            for await value in stream {
-                await collector.add(value)
-            }
-        }
-    }
-
-    func add(_ event: String) {
-        continuation?.yield(event)
-    }
-}
-
-actor Collector {
-    private var events: [String] = []
-    private var batchSize: Int = 3
-    private var sender: Task<Void, Never>?
-    var sent: [[String]] = []
-
-    init() {}
-
-    func add(_ event: String) async {
-        print("enqueued event: \(event)")
-        events.append(event)
-
-        sender?.cancel()
-        await sender?.value
-        sender = nil
-
-        sender = Task {
-            do {
-                try await Task.sleep(for: .seconds(1))
-                await send()
-            } catch {
-                print("sender was cancelled with incoming event.")
-            }
-        }
-
-        if events.count >= batchSize {
-            await send()
-        }
-    }
-
-    func send() async {
-        do {
-            try await Task.sleep(for: .seconds(1))
-
-            if events.count >= batchSize {
-                let batch = events.prefix(batchSize)
-                events.removeFirst(batchSize)
-                print("sending out batch: \(batch)")
-                sent.append(Array(batch))
-            } else {
-                let batch = events
-                events.removeAll()
-                print("sending out remaining: \(batch)")
-                sent.append(Array(batch))
-            }
-        } catch {
-            print("Cancelled.")
         }
     }
 }
