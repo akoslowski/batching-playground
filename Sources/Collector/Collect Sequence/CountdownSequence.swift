@@ -1,12 +1,14 @@
 import Foundation
 
-// An example for .collect(_)
+/// An async sequence that counts down from a start value with a delay between each step.
 struct CountdownSequence: AsyncSequence {
     typealias Element = Int
 
     let start: Int
     let delay: TimeInterval
 
+    /// Creates an async iterator for the countdown sequence.
+    /// - Returns: An iterator that emits countdown values.
     func makeAsyncIterator() -> AsyncIterator {
         AsyncIterator(current: start, delay: delay)
     }
