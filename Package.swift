@@ -18,7 +18,7 @@ let package = Package(
         .target(
             name: "Collector",
             dependencies: [
-                .product(name: "SwiftAsyncAlgorithms", package: "SwiftAsyncAlgorithms")
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms")
             ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
@@ -26,7 +26,10 @@ let package = Package(
         ),
         .testTarget(
             name: "CollectorTests",
-            dependencies: ["Collector"]
+            dependencies: [
+                "Collector",
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms")
+            ]
         ),
     ]
 )
