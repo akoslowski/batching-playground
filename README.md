@@ -20,7 +20,7 @@ tbd
 
 ### Using `chunks` from `swift-async-algorithms`
 
-> https://github.com/apple/swift-async-algorithms/blob/main/Sources/AsyncAlgorithms/AsyncAlgorithms.docc/Guides/Chunked.md
+> https://github.com/apple/swift-async-algorithms/blob/main/Sources/AsyncAlgorithms/AsyncAlgorithms.docc/Guides/Chunked.md#count-or-signal-1
 
 tbd
 
