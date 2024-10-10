@@ -4,6 +4,47 @@ import AsyncAlgorithms
 
 @testable import Collector
 
+struct Timeout {
+
+    let task: Task<Void, Never>
+
+    init(timeout: Duration, action: @escaping @Sendable () throws -> Void) async {
+        task = Task {
+            do {
+                try await Task.sleep(for: timeout)
+                try action()
+            }
+            catch {}
+        }
+    }
+
+    func cancel() {
+        task.cancel()
+    }
+}
+
+@Test func simpleQueueWithAsyncChannel() async throws {
+    let channel = AsyncChannel<String>()
+
+    async let timeout = Timeout(timeout: .milliseconds(5)) {
+        channel.finish()
+    }
+
+    /// Sends an element to an **awaiting** iteration.
+    async let _ = Task {
+        await channel.send("hello")
+    }
+
+    var values: [String] = []
+    for await value in channel {
+        values.append(value)
+    }
+
+    await timeout.cancel()
+
+    #expect(values == ["hello"])
+}
+
 @Test func testChunksOfBatches() async throws {
     let q = StreamQueue<String>()
 
