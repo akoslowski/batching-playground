@@ -7,6 +7,7 @@ import AsyncAlgorithms
 
     Task {
         try await Task.sleep(for: .milliseconds(1))
+        // ends the for-await-loop
         channel.finish()
     }
 
@@ -16,6 +17,7 @@ import AsyncAlgorithms
     }
 
     var values: [String] = []
+    // the for-await-loop will wait for values, until the channel is manually finished
     for await value in channel {
         values.append(value)
     }
