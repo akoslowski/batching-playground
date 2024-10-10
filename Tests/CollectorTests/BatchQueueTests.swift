@@ -6,7 +6,7 @@ import AsyncAlgorithms
 
 struct Timeout {
 
-    let task: Task<Void, Never>
+    private let task: Task<Void, Never>
 
     init(timeout: Duration, action: @escaping @Sendable () throws -> Void) async {
         task = Task {
