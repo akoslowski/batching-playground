@@ -4,11 +4,11 @@ import AsyncAlgorithms
 
 @testable import Collector
 
-struct Timeout {
+struct ExecuteAfterTimeout {
 
     private let task: Task<Void, Never>
 
-    init(timeout: Duration, action: @escaping @Sendable () throws -> Void) async {
+    init(of timeout: Duration, action: @escaping @Sendable () throws -> Void) {
         task = Task {
             do {
                 try await Task.sleep(for: timeout)
@@ -26,7 +26,7 @@ struct Timeout {
 @Test func simpleQueueWithAsyncChannel() async throws {
     let channel = AsyncChannel<String>()
 
-    async let timeout = Timeout(timeout: .milliseconds(5)) {
+    let timeout = ExecuteAfterTimeout(of: .milliseconds(5)) {
         channel.finish()
     }
 
@@ -39,8 +39,6 @@ struct Timeout {
     for await value in channel {
         values.append(value)
     }
-
-    await timeout.cancel()
 
     #expect(values == ["hello"])
 }
