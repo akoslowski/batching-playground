@@ -16,6 +16,12 @@ actor Timebox {
         self.action = action
     }
 
+    nonisolated func start() {
+        Task {
+            await reset()
+        }
+    }
+
     /// Resets the timeout, cancelling any existing task and starting a new one.
     func reset() async {
         task?.cancel()

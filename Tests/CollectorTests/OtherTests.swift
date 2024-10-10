@@ -3,6 +3,7 @@ import Testing
 import AsyncAlgorithms
 
 @Test func simpleQueueWithAsyncChannel() async throws {
+    // A channel for sending elements from one task to another with back pressure.
     let channel = AsyncChannel<String>()
 
     Task {
@@ -11,7 +12,7 @@ import AsyncAlgorithms
         channel.finish()
     }
 
-    /// Sends an element to an **awaiting** iteration.
+    // Sends an element to an **awaiting** iteration.
     Task {
         await channel.send("hello")
     }

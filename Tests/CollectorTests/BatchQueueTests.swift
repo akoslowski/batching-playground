@@ -1,6 +1,6 @@
+import AsyncAlgorithms
 import Foundation
 import Testing
-import AsyncAlgorithms
 
 @testable import Collector
 
@@ -22,8 +22,14 @@ import AsyncAlgorithms
     q.push("10")
     q.push("11")
 
+    let signal = StreamQueue<Void>()
+    let timer: Timebox = .init(timeout: .milliseconds(5)) {
+        signal.push(())
+    }
+    await timer.reset()
+
     var batches: [[String]] = []
-    for await batch in q.chunks(ofCount: 3, or: .repeating(every: .milliseconds(5))).prefix(4) {
+    for await batch in q.chunks(ofCount: 3, or: signal).prefix(4) {
         batches.append(batch)
     }
 
