@@ -11,9 +11,15 @@ let package = Package(
             targets: ["Collector"]
         ),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0")
+    ],
     targets: [
         .target(
             name: "Collector",
+            dependencies: [
+                .product(name: "SwiftAsyncAlgorithms", package: "SwiftAsyncAlgorithms")
+            ],
             swiftSettings: [
                 .swiftLanguageMode(.v6),
             ]
