@@ -3,15 +3,13 @@ import Foundation
 /// A structure that provides an async sequence interface for streaming elements.
 struct StreamQueue<Element: Sendable>: AsyncSequence {
     private let stream: AsyncStream<Element>
-    private let continuation: AsyncStream<Element>.Continuation?
+    private let continuation: AsyncStream<Element>.Continuation
 
     /// Initializes a new StreamQueue.
-    public init() {
-        var _continuation: AsyncStream<Element>.Continuation?
-        stream = AsyncStream { continuation in
-            _continuation = continuation
-        }
-        continuation = _continuation
+    public init(bufferingPolicy: AsyncStream<Element>.Continuation.BufferingPolicy = .unbounded) {
+        let (stream, continuation) = AsyncStream<Element>.makeStream(of: Element.self, bufferingPolicy: bufferingPolicy)
+        self.stream = stream
+        self.continuation = continuation
     }
 
     /// Creates an async iterator for the stream queue.
@@ -23,11 +21,11 @@ struct StreamQueue<Element: Sendable>: AsyncSequence {
     /// Pushes a new event into the stream queue.
     /// - Parameter event: The event to add to the stream.
     func push(_ event: Element) {
-        continuation?.yield(event)
+        continuation.yield(event)
     }
 
     /// Cancels the stream queue, stopping any further streaming.
     func cancel() {
-        continuation?.finish()
+        continuation.finish()
     }
 }
